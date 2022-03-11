@@ -233,23 +233,25 @@ export class DocumentDetailComponent implements OnInit, OnDestroy, DirtyComponen
   saveEditNext() {
     this.networkActive = true
     this.store.next(this.documentForm.value)
-    this.documentsService.update(this.document).pipe(switchMap(updateResult => {
-      return this.documentListViewService.getNext(this.documentId).pipe(map(nextDocId => ({nextDocId, updateResult})))
-    })).pipe(switchMap(({nextDocId, updateResult}) => {
-      if (nextDocId && updateResult) return this.openDocumentService.closeDocument(this.document).pipe(map(closeResult => ({updateResult, nextDocId, closeResult})))
-    }))
-    .pipe(first())
-    .subscribe(({updateResult, nextDocId, closeResult}) => {
-      this.error = null
-      this.networkActive = false
-      if (closeResult && updateResult && nextDocId) {
-        this.router.navigate(['documents', nextDocId])
-        this.titleInput?.focus()
-      }
-    }, error => {
-      this.networkActive = false
-      this.error = error.error
-    })
+    this.documentsService.update(this.document)
+      .pipe(switchMap(updateResult => {
+          return this.documentListViewService.getNext(this.documentId).pipe(map(nextDocId => ({nextDocId, updateResult})))
+        }))
+      .pipe(switchMap(({nextDocId, updateResult}) => {
+        if (nextDocId && updateResult) return this.openDocumentService.closeDocument(this.document).pipe(map(closeResult => ({updateResult, nextDocId, closeResult})))
+        }))
+      .pipe(first())
+      .subscribe(({updateResult, nextDocId, closeResult}) => {
+        this.error = null
+        this.networkActive = false
+        if (closeResult && updateResult && nextDocId) {
+          this.router.navigate(['documents', nextDocId])
+          this.titleInput?.focus()
+        }
+      }, error => {
+        this.networkActive = false
+        this.error = error.error
+      })
   }
 
   close() {
@@ -290,6 +292,24 @@ export class DocumentDetailComponent implements OnInit, OnDestroy, DirtyComponen
 
   hasNext() {
     return this.documentListViewService.hasNext(this.documentId)
+  }
+
+  hasPrevious() {
+    return this.documentListViewService.hasPrevious(this.documentId)
+  }
+
+  nextDoc() {
+    this.documentListViewService.getNext(this.document.id).subscribe((nextDocId: number) => {
+      this.router.navigate(['documents', nextDocId])
+      this.titleInput?.focus()
+    })
+  }
+  
+  previousDoc () {
+    this.documentListViewService.getPrevious(this.document.id).subscribe((prevDocId: number) => {
+      this.router.navigate(['documents', prevDocId])
+      this.titleInput?.focus()
+    })
   }
 
   pdfPreviewLoaded(pdf: PDFDocumentProxy) {
